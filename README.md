@@ -9,7 +9,13 @@
 
 ## [Project Overview / 영문 상세 내용]
 
-Quantum Narratives is an interactive text-based novel project that integrates quantum mechanics principles into its narrative structure. It provides a unique experience where the story collapses into reality or evolves based on user choices and observations.
+붕괴 (Collapse) is an interactive text-based novel project that integrates quantum mechanics principles into its narrative structure. It provides a unique experience where the story collapses into reality or evolves based on user choices and observations.
+
+#### 5.1 Repository Roles (레포지토리 역할)
+- **Private Repo (`origin`)**: `quantum-narratives` (이 저장소). 프로젝트의 전반적인 개발 인프라와 AI 엔진을 관리합니다.
+- **Public Repo (`public`)**: `collapse-novel` (붕괴). 독자들이 소설을 감상하고 상호작용하는 공식 발행 공간입니다.
+
+#### 5.2 Branching & Sync (동기화 규칙)
 
 ### Core Concepts (핵심 컨셉)
 - **Superposition (중첩)**: Fragments of the story exist in multiple possibilities simultaneously until observed (clicked/paged).
@@ -19,6 +25,11 @@ Quantum Narratives is an interactive text-based novel project that integrates qu
 ### Technical Stack (기술 스택)
 - **Frontend**: HTML5, Vanilla CSS (Glassmorphism), Vanilla JavaScript.
 - **Engine**: Custom `QuantumNarrativeEngine` for state management and probabilistic logic.
+
+### 🔗 Public Narrative Repository (공개 소설 저장소: 붕괴)
+- **Repo Name**: `collapse-novel` (또는 지정하신 소설 제목)
+- **URL**: `https://github.com/[Your-ID]/collapse-novel`
+- **Role**: This is the public-facing stage where the "collapsed" reality of the novel is published.
 
 ### Documentation Policy (문서화 정책)
 Following our writing policy in [.agent/agent.md](file:///c:/Users/user/oxp_workspace/quantum%20narratives/.agent/agent.md), all major documents will feature a Korean summary at the top, followed by detailed English content.

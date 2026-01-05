@@ -25,7 +25,13 @@
 - **Transparency**: If a design choice involves significant complexity, explain the trade-offs clearly in the bilingual format.
 - **Iteration**: Be ready to refactor story data and logic based on user feedback, treating the narrative as a "living" quantum state.
 
-### 4. Quantum Commit Strategy (양자 테마 커밋 전략)
+### 4. Multi-Repo Management (멀티 레포지토리 관리)
+개발과 배포 저장소가 분리됨에 따라 다음 원칙을 준수합니다.
+- **Privacy First**: `Private` 저장소의 실시간 개발 로그(`develop` 브랜치)는 절대 `Public` 저장소로 유출되지 않도록 필터링함.
+- **Sanitized Release**: `Public` 저장소로의 푸시는 오직 `Private/main` 브랜치를 통해서만 이루어지며, 배포 전 QA 시나리오를 통과해야 함.
+- **Unified Narrative**: 두 저장소의 커밋 내역은 서로 다른 '관측 레이어'로 간주하며, `Public` 저장소의 메시지는 더욱 서사적인 표현을 사용함.
+
+### 5. Quantum Commit Strategy (양자 테마 커밋 전략)
 커밋 메시지는 프로젝트의 타임라인을 기록하는 '관측 로그'입니다. 다음 태그를 활용합니다.
 - **`wavefunction`**: 프로젝트 초기 설정 또는 대규모 구조 변경 (Init/Major)
 - **`collapse`**: 새로운 기능 구현 또는 챕터 완성 (Feature)

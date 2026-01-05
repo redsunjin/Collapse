@@ -1,4 +1,4 @@
-# Reader's Guide (독자 가이드 - 관측 매뉴얼)
+# Reader's Guide (독자 가이드 - 관측 매뉴얼: 붕괴)
 
 ## [한글 요약 / Korean Summary]
 "Quantum Narratives"의 세계에 오신 것을 환영합니다. 이 문서는 독자들이 어떻게 이 양자 소설을 읽고, 상호작용하며, 새로운 현실을 관측할 수 있는지 안내합니다.

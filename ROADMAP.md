@@ -1,4 +1,4 @@
-# Development Roadmap: Quantum Narratives
+# Development Roadmap: 붕괴 (Collapse) - Interactive Novel
 
 ## Phase 1: MVP - The First Collapse (진행 중)
 - [x] 기본 프로젝트 구조 설정 (HTML/CSS/JS)
@@ -6,7 +6,7 @@
 - [x] 초기 디자인 시스템 (Glassmorphism) 적용
 - [x] 첫 번째 프롤로그 에피소드 작성
 
-## Phase 1.5: Community-Native Pre-Release (커뮤니티 최적화)
+## Phase 1.5: Reader's Guide (독자 가이드 - 관측 매뉴얼: 붕괴)
 - [ ] 레딧 전용 '게시물 간 링크' 구조 설계 (Reddit-native CYOA)
 - [ ] 플랫폼 이탈 없는 텍스트 기반 인터렉션 레이어 제작
 - [ ] 정적 텍스트/PDF 버전 배포 준비
@@ -22,7 +22,7 @@
 - [ ] 옴니버스 형식의 2~3개 챕터 추가
 - [ ] 사운드 효과 및 배경음악(태그 기반) 시스템 구축
 
-## Phase 3: Observation - Meta-Narrative
+## Phase 3: Distribution & Anti-Plagiarism Strategy: 붕괴 (Collapse)
 - [ ] UI 요소와의 상호작용이 스토리에 영향을 미치는 기믹 추가
 - [ ] 멀티 엔딩 시스템 및 기록(로그) 기능
 - [ ] 시각 효과 고도화 (Shader effects, Particle systems)

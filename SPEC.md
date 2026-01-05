@@ -1,4 +1,4 @@
-# Technical Specification: Quantum Narrative Engine
+# Technical Specification: 붕괴 (Collapse) - Narrative Engine
 
 ## 1. 개요
 `QuantumNarrativeEngine`은 텍스트 기반 소설의 비선형적 흐름을 관리하며, 양자역학적 상태(Superposition, Collapse)를 시뮬레이션합니다.

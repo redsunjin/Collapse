@@ -1,9 +1,9 @@
-# Distribution & Anti-Plagiarism Strategy (배포 및 표절 방지 전략)
+# Distribution & Anti-Plagiarism Strategy: 붕괴 (Collapse)
 
 ## [한글 요약 / Korean Summary]
 "Quantum Narratives"의 글로벌 배포를 위한 플랫폼 선정과 창작물 보호를 위한 전략을 제안합니다.
-- **배포 플랫폼**: Reddit(커뮤니티), itch.io(인디 게임), GitHub(서사 플랫폼) 등을 활용한 다각도 접근.
-- **커뮤니티 네이티브 포맷**: 레딧 게시물 간 링크 및 깃허브 디렉토리 구조를 활용한 배포.
+- **배포 플랫폼**: Reddit(커뮤니티), itch.io(인디 게임), GitHub(서사/개발 분리) 등을 활용한 다각도 접근.
+- **배포 아키텍처**: 비공개 개발용 레포지토리와 공개 독자용 레포지토리의 이원화 운영.
 - **표절 방지**: 주기적인 AI 기반 표절 검사와 고유한 Narrative Engine 로직 노출 최소화.
 - **홍보 전략**: '양자역학적 선택'이라는 독특한 키워드를 중심으로 짧은 데모 영상과 인터렉티브 미리보기를 배포.
 
@@ -32,13 +32,21 @@
 - **Issues as Observation**: 특정 스토리 구간의 의문점이나 관측 결과를 Issue로 등록하여, QSM(AI)이 이에 응답하거나 다음 챕터에 반영하게 함.
 - **Releases/Tags**: 이야기의 큰 전환점을 '버전'으로 배포하여 사용자가 과거의 현실로 돌아가거나 새로운 도약(Leap)을 하는 경험 제공.
 
-### 5. Dual-Branch Security Strategy (이원화 보안 전략)
-소스코드 보안과 독자 경험 분리를 위해 다음과 같이 브랜치를 운용합니다.
-- **`develop` (비공개 권장)**: 모든 개발 소스(`src`), 정책(`.agent`), 기술 문서(`SPEC.md`, `ROADMAP.md`)를 포함하는 작업 브랜치.
-- **`main` (공개 배포)**: 오직 '소설 독자'를 위한 브랜치. 
-  - **포함 항목**: 실행용 파일(`index.html`, `style.css`, `engine.js`, `story_data.js`), 공개용 `README.md`, 독자 매뉴얼(`MANUAL.md`).
-  - **제외 항목**: `.agent`, `src`, `SPEC.md`, `ROADMAP.md`, `task.md` 등 개발 관련 모든 내부 데이터.
-- **자동화**: `develop`에서 검증이 완료된 스토리만 `main`으로 머지(Merge)하거나, 배포용 빌드 결과물만 푸시하는 워크플로우를 권장합니다.
+### 5. Multi-Repository Security Strategy (멀티 레포지토리 보안 전략)
+소스코드와 서사 콘텐츠를 물리적으로 분리하여 보안을 극대화합니다.
+
+#### 5.1 Repository Roles (레포지토리 역할)
+- **Private Repo (`origin`)**: `quantum-narratives` (현재 이 저장소). 프로젝트의 모든 설정, 소스 코드, AI 정책이 담긴 '블랙박스'입니다. 공개 레포지토리에 대한 정보를 `README.md`에 유지합니다.
+- **Public Repo (`public`)**: `collapse-novel` (또는 실제 소설 제목). 독자들에게 보여줄 최종 결과물만 업로드되는 '무대'입니다.
+
+#### 5.2 Branching & Sync (동기화 규칙)
+1. **Develop Phase**: `origin/develop`에서 자유롭게 실험하고 개발합니다.
+2. **Release Phase**: 발행 준비가 되면 `main` 브랜치로 필요한 파일만 복사/커밋합니다.
+3. **Public Sync**: `git push public main` 명령어를 통해 공개 레포지토리로 이야기를 전송합니다.
+
+#### 5.3 Automated Privacy (자동화 및 보호)
+- GitHub Actions를 활용하여 `Private/main` 업데이트 시 자동으로 `Public` 레포지토리로 전송하는 파이프라인 구축 권장.
+- `Public` 레포지토리의 커밋 메시지는 `agent.md`의 **Observation Log** 규칙을 엄격히 준수하여 서사성을 유지함.
 
 ### 6. Marketing Strategy
 - **Interactive Demos**: Release a "Quantum Prologue" as a free, sharable link.
