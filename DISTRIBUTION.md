@@ -26,27 +26,37 @@
   - **Link Architecture**: 각 게시물의 끝에 다음 단계로 이어지는 다른 게시물 또는 댓글의 링크를 배치합니다. 이는 사용자가 플랫폼을 이탈하지 않고도 '선택'의 재미를 느끼게 합니다.
   - **Quantum Hybrid**: Reddit에서 선택지를 클릭하면 유입 경로(Referrer)에 따라 다른 결과를 보여주는 웹 페이지로 연결하여 '양자적 붕괴'를 경험하게 합니다.
 
-### 4. GitHub-Native Strategy (깃허브 서사 플랫폼화)
+### 4. Multi-Repo Management (멀티 레포지토리 관리)
+개발과 배포 저장소가 분리됨에 따라 다음 원칙을 준수합니다.
+- **Privacy First**: `Private` 저장소의 실시간 개발 로그(`develop` 브랜치)는 절대 `Public` 저장소로 유출되지 않도록 필터링함.
+- **Sanitized Release**: `Public` 저장소로의 푸시는 `publish` 브랜치 또는 클린 스윕 스크립트를 통해서만 이루어지며, 배포 전 QA 시나리오를 통과해야 함.
+- **Unified Narrative**: 두 저장소의 커밋 내역은 서로 다른 '관측 레이어'로 간주하며, `Public` 저장소의 메시지는 더욱 서사적인 표현을 사용함.
+- **Releases/Tags**: 이야기의 큰 전환점을 '버전'으로 배포하여 사용자가 과거의 현실로 돌아가거나 새로운 도약(Leap)을 하는 경험 제공.
+
+### 5. GitHub-Native Strategy (깃허브 서사 플랫폼화)
 - **GitHub Pages**: `index.html`을 기반으로 한 즉각적인 웹 서비스 배포.
 - **Pull Request as Timeline**: 독자가 직접 새로운 '타임라인'이나 '분기'를 PR로 제안하도록 유도하여 참여형 소설로 확장.
 - **Issues as Observation**: 특정 스토리 구간의 의문점이나 관측 결과를 Issue로 등록하여, QSM(AI)이 이에 응답하거나 다음 챕터에 반영하게 함.
 - **Releases/Tags**: 이야기의 큰 전환점을 '버전'으로 배포하여 사용자가 과거의 현실로 돌아가거나 새로운 도약(Leap)을 하는 경험 제공.
 
-### 5. Multi-Repository Security Strategy (멀티 레포지토리 보안 전략)
+### 6. Multi-Repository Security Strategy (멀티 레포지토리 보안 전략)
 소스코드와 서사 콘텐츠를 물리적으로 분리하여 보안을 극대화합니다.
 
-#### 5.1 Repository Roles (레포지토리 역할)
+#### 6.1 Repository Roles (레포지토리 역할)
 - **Private Repo (`origin`)**: `quantum-narratives` (현재 이 저장소). 프로젝트의 모든 설정, 소스 코드, AI 정책이 담긴 '블랙박스'입니다. 공개 레포지토리에 대한 정보를 `README.md`에 유지합니다.
 - **Public Repo (`public`)**: `collapse-novel` (또는 실제 소설 제목). 독자들에게 보여줄 최종 결과물만 업로드되는 '무대'입니다.
 
 #### 5.2 Branching & Sync (동기화 규칙)
-1. **Develop Phase**: `origin/develop`에서 자유롭게 실험하고 개발합니다.
-2. **Release Phase**: 발행 준비가 되면 `main` 브랜치로 필요한 파일만 복사/커밋합니다.
-3. **Public Sync**: `git push public main` 명령어를 통해 공개 레포지토리로 이야기를 전송합니다.
+1. **Develop Phase**: `origin/develop`에서 자유롭게 실험하고 개발합니다. 이 브랜치는 모든 소스와 이력을 포함하는 마스터 타임라인입니다.
+2. **Release Phase**: 발행 준비가 되면 `publish` 브랜치(또는 임시 폴더)로 필요한 파일만 추출합니다.
+3. **Public Sync**: `git push public publish:main` 명령어를 통해 공개 레포지토리의 `main` 브랜치로 이야기를 전송합니다.
 
-#### 5.3 Automated Privacy (자동화 및 보호)
-- GitHub Actions를 활용하여 `Private/main` 업데이트 시 자동으로 `Public` 레포지토리로 전송하는 파이프라인 구축 권장.
-- `Public` 레포지토리의 커밋 메시지는 `agent.md`의 **Observation Log** 규칙을 엄격히 준수하여 서사성을 유지함.
+#### 5.3 Quantum Filtered Synchronization (클린 스윕 동기화)
+단순 브랜치 푸시는 과거의 개발 이력(커밋 로그)과 삭제된 파일의 흔적까지 공개 저장소로 보낼 위험이 있습니다. 이를 방지하기 위해 `publish.ps1`은 다음의 **양자 필터링(Quantum Filtering)** 과정을 거칩니다.
+1. **Sanitization**: `develop` 브랜치에서 오직 공개 가능한 최신 파일들만 별도의 **임시 폴더(Temp)**로 추출합니다.
+2. **History Reset**: 임시 폴더에서 `git init`을 통해 새로운 이력을 생성합니다. 이는 과거의 모든 개발 로그를 세탁하고 오직 '현재의 완성된 형태'만 남깁니다.
+3. **Pure Deployment**: 정제된 상태만을 공개 저장소(`public`)의 `main` 브랜치로 강제 푸시합니다.
+4. **Result**: 독자들은 엔진의 설계도나 비공개 기획의 흔적을 전혀 볼 수 없으며, 오직 '관측된 결과물'인 소설만을 보게 됩니다.
 
 ### 6. Marketing Strategy
 - **Interactive Demos**: Release a "Quantum Prologue" as a free, sharable link.
