@@ -1,0 +1,22 @@
+{
+    "id": "atom_006",
+    "title": "양자 메아리",
+    "tags": [
+        "multiverse",
+        "echo",
+        "choice"
+    ],
+    "content": "모든 선택은 평행 우주를 창조합니다. 당신이 버린 현실들이 복도의 어둠 속에서 속삭입니다. '나를 선택했어야지.'",
+    "entanglement_points": [
+        {
+            "key": "reality_coherence",
+            "effect": "-0.5",
+            "on": "regret"
+        },
+        {
+            "key": "memory_sync",
+            "effect": "+0.5",
+            "on": "listening"
+        }
+    ]
+}

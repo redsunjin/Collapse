@@ -1,0 +1,22 @@
+{
+    "id": "atom_005",
+    "title": "주방의 유령",
+    "tags": [
+        "home",
+        "mystery",
+        "superposition"
+    ],
+    "content": "식탁 앞의 빈 의자가 미세하게 떨립니다. 당신은 분명 혼자인데, 누군가 건너편에서 커피를 홀짝이는 소리가 들립니다. 관측되지 않은 존재가 당신의 주방에 있습니다.",
+    "entanglement_points": [
+        {
+            "key": "reality_coherence",
+            "effect": "-0.3",
+            "on": "listening"
+        },
+        {
+            "key": "memory_sync",
+            "effect": "+0.2",
+            "on": "observation"
+        }
+    ]
+}
