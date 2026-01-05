@@ -46,17 +46,17 @@
 - **Private Repo (`origin`)**: `quantum-narratives` (현재 이 저장소). 프로젝트의 모든 설정, 소스 코드, AI 정책이 담긴 '블랙박스'입니다. 공개 레포지토리에 대한 정보를 `README.md`에 유지합니다.
 - **Public Repo (`public`)**: `collapse-novel` (또는 실제 소설 제목). 독자들에게 보여줄 최종 결과물만 업로드되는 '무대'입니다.
 
-#### 5.2 Branching & Sync (동기화 규칙)
+#### 6.2 Branching & Sync (동기화 규칙)
 1. **Develop Phase**: `origin/develop`에서 자유롭게 실험하고 개발합니다. 이 브랜치는 모든 소스와 이력을 포함하는 마스터 타임라인입니다.
-2. **Release Phase**: 발행 준비가 되면 `publish` 브랜치(또는 임시 폴더)로 필요한 파일만 추출합니다.
-3. **Public Sync**: `git push public publish:main` 명령어를 통해 공개 레포지토리의 `main` 브랜치로 이야기를 전송합니다.
+2. **Staging Phase (`.\publish.ps1 -StageOnly`)**: 발행 준비가 되면 정제된 파일들을 추출하여 로컬 **`publish`** 브랜치로 전송합니다. 이 브랜치는 공개 저장소를 위한 정제된 '이전 관측 상태'를 유지합니다.
+3. **Public Sync (`.\publish.ps1 -PushOnly`)**: 로컬 `publish` 브랜치의 상태를 공개 저장소(`public`)의 `main` 브랜치로 강제 푸시합니다.
 
-#### 5.3 Quantum Filtered Synchronization (클린 스윕 동기화)
-단순 브랜치 푸시는 과거의 개발 이력(커밋 로그)과 삭제된 파일의 흔적까지 공개 저장소로 보낼 위험이 있습니다. 이를 방지하기 위해 `publish.ps1`은 다음의 **양자 필터링(Quantum Filtering)** 과정을 거칩니다.
-1. **Sanitization**: `develop` 브랜치에서 오직 공개 가능한 최신 파일들만 별도의 **임시 폴더(Temp)**로 추출합니다.
-2. **History Reset**: 임시 폴더에서 `git init`을 통해 새로운 이력을 생성합니다. 이는 과거의 모든 개발 로그를 세탁하고 오직 '현재의 완성된 형태'만 남깁니다.
-3. **Pure Deployment**: 정제된 상태만을 공개 저장소(`public`)의 `main` 브랜치로 강제 푸시합니다.
-4. **Result**: 독자들은 엔진의 설계도나 비공개 기획의 흔적을 전혀 볼 수 없으며, 오직 '관측된 결과물'인 소설만을 보게 됩니다.
+#### 6.3 Quantum Filtered Synchronization (클린 스윕 동기화)
+단순 브랜치 푸시는 과거의 개발 이력(커밋 로그)과 삭제된 파일의 흔적까지 공개 저장소로 보낼 위험이 있습니다. 이를 방지하기 위해 `publish.ps1`은 다음 과정을 거칩니다.
+1. **Sanitization**: `develop` 브랜치에서 오직 공개 가능한 최신 파일들만 임시 폴더로 추출합니다.
+2. **History Washing**: 임시 폴더에서 새로운 이력을 생성하여 과거 로그를 완전히 소거합니다.
+3. **Ghost Merging**: 정제된 이력을 로컬 `publish` 브랜치에 덮어씁니다. (로컬 확인 가능)
+4. **Pure Deployment**: 로컬 `publish` 브랜치를 공개 저장소로 전송합니다.
 
 ### 6. Marketing Strategy
 - **Interactive Demos**: Release a "Quantum Prologue" as a free, sharable link.
