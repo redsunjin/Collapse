@@ -19,13 +19,9 @@ class QuantumNarrativeEngine {
     }
 
     init() {
-        // Condition: Skip prologue if already confirmed
-        if (this.isRealityConfirmed && this.history.length > 0) {
-            const lastNode = this.history[this.history.length - 1];
-            this.loadNode(lastNode || 'atom_001');
-        } else {
-            this.loadNode('start');
-        }
+        // Condition: DO NOT auto-load if we just entered.
+        // Instead, we will always start at 'start', and the engine will provide a 'CONTINUE' button if history exists.
+        this.loadNode('start');
 
         this.resetBtn.addEventListener('click', () => this.confirmRestart());
         this.mapBtn.addEventListener('click', () => this.toggleMap(true));
@@ -47,7 +43,10 @@ class QuantumNarrativeEngine {
         this.currentState = node;
         if (nodeId.startsWith('atom_')) {
             this.observedAtoms.add(nodeId);
-            if (!this.history.includes(nodeId)) this.history.push(nodeId);
+            // Only add to history if it's the latest step
+            if (this.history[this.history.length - 1] !== nodeId) {
+                this.history.push(nodeId);
+            }
             this.isRealityConfirmed = true; // Any atom visit confirms reality
         }
 
@@ -65,15 +64,30 @@ class QuantumNarrativeEngine {
         html += `<p>${node.content}</p>`;
 
         this.storyViewport.innerHTML = html;
-        this.renderActions(node.actions);
+        this.renderActions(node.id, node.actions);
     }
 
-    renderActions(actions) {
+    renderActions(nodeId, actions) {
         this.actionButtons.innerHTML = '';
+
+        // Dynamic Logic: Add 'Continue' button to start if history exists
+        if (nodeId === 'start' && this.history.length > 0) {
+            const contBtn = document.createElement('button');
+            const lastNodeId = this.history[this.history.length - 1];
+            contBtn.innerText = "연결된 관측 재개 (CONTINUE)";
+            contBtn.classList.add('quantum-pulse');
+            contBtn.onclick = () => this.loadNode(lastNodeId);
+            this.actionButtons.appendChild(contBtn);
+        }
+
         actions.forEach((action, index) => {
             const btn = document.createElement('button');
             btn.innerText = action.text;
-            if (index === 0) btn.classList.add('quantum-pulse');
+
+            // Pulse the first action only if there's no continue button
+            if (index === 0 && (nodeId !== 'start' || this.history.length === 0)) {
+                btn.classList.add('quantum-pulse');
+            }
 
             btn.onclick = () => {
                 if (action.type === 'collapse') {
@@ -156,40 +170,64 @@ class QuantumMap {
 
         if (history.length === 0) return;
 
-        const nodes = history.map((id, i) => ({
-            id,
-            x: 100 + (i * 150) % (this.canvas.width - 200),
-            y: 150 + Math.floor((i * 150) / (this.canvas.width - 200)) * 100,
-            title: this.data[id] ? this.data[id].title : id
-        }));
+        // Create organic node positions base on history index and id
+        const nodes = history.map((id, i) => {
+            // Seeded random for consistent layout of the same history
+            const seed = id.split('_')[1] || i;
+            const jitterX = (Math.sin(seed * 0.5) * 100);
+            const jitterY = (Math.cos(seed * 0.5) * 100);
 
-        // Draw connections
-        ctx.beginPath();
-        ctx.strokeStyle = 'rgba(0, 242, 255, 0.2)';
+            return {
+                id,
+                x: (this.canvas.width / 2) + jitterX + (Math.sin(i) * (i * 10)),
+                y: (this.canvas.height / 2) + jitterY + (Math.cos(i) * (i * 10)),
+                title: this.data[id] ? this.data[id].title : id
+            };
+        });
+
+        // Draw connections with gradient/pulse
         ctx.lineWidth = 1;
         for (let i = 0; i < nodes.length - 1; i++) {
+            const grad = ctx.createLinearGradient(nodes[i].x, nodes[i].y, nodes[i + 1].x, nodes[i + 1].y);
+            grad.addColorStop(0, 'rgba(0, 242, 255, 0.4)');
+            grad.addColorStop(1, 'rgba(255, 0, 255, 0.4)');
+
+            ctx.beginPath();
+            ctx.strokeStyle = grad;
+            ctx.setLineDash([5, 5]); // Glitchy dashed line
             ctx.moveTo(nodes[i].x, nodes[i].y);
             ctx.lineTo(nodes[i + 1].x, nodes[i + 1].y);
+            ctx.stroke();
+            ctx.setLineDash([]);
         }
-        ctx.stroke();
 
-        // Draw nodes
+        // Draw nodes with "Quantum Core" effect
         nodes.forEach((node, i) => {
             const isLast = i === nodes.length - 1;
 
-            // Glow effect
-            ctx.shadowBlur = isLast ? 20 : 5;
-            ctx.shadowColor = 'var(--accent-color)';
+            // Draw core
+            ctx.shadowBlur = isLast ? 30 : 10;
+            ctx.shadowColor = isLast ? '#ff00ff' : 'var(--accent-color)';
 
             ctx.fillStyle = isLast ? '#fff' : 'var(--accent-color)';
             ctx.beginPath();
-            ctx.arc(node.x, node.y, isLast ? 6 : 4, 0, Math.PI * 2);
+            ctx.arc(node.x, node.y, isLast ? 8 : 5, 0, Math.PI * 2);
             ctx.fill();
 
+            // Draw orbit ring for last node
+            if (isLast) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 15, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
             ctx.shadowBlur = 0;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
-            ctx.font = '10px Inter';
-            ctx.fillText(node.title, node.x - 20, node.y + 20);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = '700 10px Inter';
+            ctx.textAlign = 'center';
+            ctx.fillText(node.title, node.x, node.y + 25);
         });
     }
 }
