@@ -136,10 +136,31 @@ class QuantumNarrativeEngine {
     toggleMap(show) {
         if (show) {
             this.mapOverlay.classList.remove('hidden');
-            this.quantumMap.render(this.history, (id) => this.handleMapClick(id), (id) => this.handleMapDelete(id));
+            this.quantumMap.render(this.history, (node) => this.showNodeInfo(node));
         } else {
             this.mapOverlay.classList.add('hidden');
+            document.getElementById('node-info-panel').classList.add('hidden');
         }
+    }
+
+    showNodeInfo(node) {
+        const panel = document.getElementById('node-info-panel');
+        const title = document.getElementById('selected-node-title');
+        const observeBtn = document.getElementById('map-observe-btn');
+        const cutBtn = document.getElementById('map-cut-btn');
+
+        title.innerText = node.title;
+        panel.classList.remove('hidden');
+
+        observeBtn.onclick = () => {
+            this.handleMapClick(node.id);
+        };
+
+        cutBtn.onclick = () => {
+            if (this.handleMapDelete(node.id)) {
+                panel.classList.add('hidden');
+            }
+        };
     }
 
     handleMapClick(nodeId) {
@@ -152,8 +173,10 @@ class QuantumNarrativeEngine {
             this.history = this.history.filter(id => id !== nodeId);
             this.observedAtoms.delete(nodeId);
             this.saveState();
-            this.toggleMap(true); // Re-render map
+            this.quantumMap.render(this.history, (node) => this.showNodeInfo(node));
+            return true;
         }
+        return false;
     }
 
     confirmRestart() {
@@ -171,30 +194,14 @@ class QuantumMap {
         this.data = storyData;
         this.nodeRadius = 15;
         this.nodes = [];
-        this.onClick = null;
-        this.onDelete = null;
-
-        this.pressTimer = null;
+        this.onSelect = null;
+        this.selectedId = null;
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
 
-        // Mouse Events
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-        this.canvas.addEventListener('mouseup', () => clearTimeout(this.pressTimer));
-        this.canvas.addEventListener('contextmenu', (e) => {
-            e.preventDefault();
-            this.handleNodeAction(e, true);
-        });
-
-        // Touch Events (Mobile/Tablet)
-        this.canvas.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            this.pressTimer = setTimeout(() => {
-                this.handleNodeAction(touch, true); // Long press = Delete
-            }, 800);
-        });
-        this.canvas.addEventListener('touchend', () => clearTimeout(this.pressTimer));
+        this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
     }
 
     resize() {
@@ -202,42 +209,44 @@ class QuantumMap {
         this.canvas.height = window.innerHeight;
     }
 
-    handleMouseDown(e) {
-        if (e.button === 2) return; // Handle right click in contextmenu listener
-        this.handleNodeAction(e, e.ctrlKey);
+    handleMouseMove(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const isOverNode = this.nodes.some(node => {
+            const dist = Math.sqrt((node.x - mouseX) ** 2 + (node.y - mouseY) ** 2);
+            return dist < this.nodeRadius + 15;
+        });
+
+        this.canvas.style.cursor = isOverNode ? 'pointer' : 'default';
     }
 
-    handleNodeAction(e, isDeleteAction) {
+    handleMouseDown(e) {
         const rect = this.canvas.getBoundingClientRect();
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-
-        const mouseX = clientX - rect.left;
-        const mouseY = clientY - rect.top;
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
 
         const clickedNode = this.nodes.find(node => {
             const dist = Math.sqrt((node.x - mouseX) ** 2 + (node.y - mouseY) ** 2);
-            return dist < this.nodeRadius + 20; // Increased hit area
+            return dist < this.nodeRadius + 20;
         });
 
         if (clickedNode) {
-            if (isDeleteAction) {
-                if (this.onDelete) this.onDelete(clickedNode.id);
-            } else {
-                if (this.onClick) this.onClick(clickedNode.id);
-            }
+            this.selectedId = clickedNode.id;
+            if (this.onSelect) this.onSelect(clickedNode);
+            this.draw();
+        } else {
+            this.selectedId = null;
+            document.getElementById('node-info-panel').classList.add('hidden');
+            this.draw();
         }
     }
 
-    render(history, onClick, onDelete) {
-        this.onClick = onClick;
-        this.onDelete = onDelete;
-        const ctx = this.ctx;
-        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    render(history, onSelect) {
+        this.onSelect = onSelect;
+        this.history = history;
 
-        if (history.length === 0) return;
-
-        // Create organic node positions base on history index and id
         this.nodes = history.map((id, i) => {
             const seed = id.split('_')[1] || i;
             const jitterX = (Math.sin(seed * 0.5) * 150);
@@ -250,6 +259,15 @@ class QuantumMap {
                 title: this.data[id] ? this.data[id].title : id
             };
         });
+
+        this.draw();
+    }
+
+    draw() {
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (this.nodes.length === 0) return;
 
         // Draw connections
         ctx.lineWidth = 1;
@@ -270,6 +288,15 @@ class QuantumMap {
         // Draw nodes
         this.nodes.forEach((node, i) => {
             const isLast = i === this.nodes.length - 1;
+            const isSelected = this.selectedId === node.id;
+
+            if (isSelected) {
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
+                ctx.stroke();
+            }
 
             ctx.shadowBlur = isLast ? 30 : 10;
             ctx.shadowColor = isLast ? '#ff00ff' : 'var(--accent-color)';
@@ -279,7 +306,7 @@ class QuantumMap {
             ctx.arc(node.x, node.y, isLast ? 8 : 5, 0, Math.PI * 2);
             ctx.fill();
 
-            if (isLast) {
+            if (isLast && !isSelected) {
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -288,14 +315,10 @@ class QuantumMap {
             }
 
             ctx.shadowBlur = 0;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.font = '700 10px Inter';
+            ctx.fillStyle = isSelected ? '#fff' : 'rgba(255, 255, 255, 0.7)';
+            ctx.font = isSelected ? '700 12px Inter' : '700 10px Inter';
             ctx.textAlign = 'center';
-            ctx.fillText(node.title, node.x, node.y + 25);
-            if (isLast) {
-                ctx.fillStyle = 'rgba(0, 242, 255, 0.5)';
-                ctx.fillText("(L-CLICK: OBSERVE | R-CLICK: CUT)", node.x, node.y + 38);
-            }
+            ctx.fillText(node.title, node.x, node.y + 35);
         });
     }
 }
