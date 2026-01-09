@@ -1,3 +1,39 @@
+class QuantumModal {
+    constructor() {
+        this.modal = document.getElementById('quantum-modal');
+        this.title = document.getElementById('modal-title');
+        this.body = document.getElementById('modal-body');
+        this.confirmBtn = document.getElementById('modal-confirm');
+        this.cancelBtn = document.getElementById('modal-cancel');
+    }
+
+    show(title, message, isDanger = false) {
+        return new Promise((resolve) => {
+            this.title.innerText = title;
+            this.body.innerText = message;
+            this.modal.classList.remove('hidden');
+
+            if (isDanger) {
+                this.confirmBtn.className = 'danger-btn';
+            } else {
+                this.confirmBtn.className = 'quantum-pulse';
+                this.confirmBtn.style.background = 'var(--accent-color)';
+                this.confirmBtn.style.color = 'var(--bg-color)';
+            }
+
+            const cleanup = (result) => {
+                this.modal.classList.add('hidden');
+                this.confirmBtn.onclick = null;
+                this.cancelBtn.onclick = null;
+                resolve(result);
+            };
+
+            this.confirmBtn.onclick = () => cleanup(true);
+            this.cancelBtn.onclick = () => cleanup(false);
+        });
+    }
+}
+
 class QuantumNarrativeEngine {
     constructor(data) {
         this.data = data;
@@ -15,12 +51,11 @@ class QuantumNarrativeEngine {
         this.closeMapBtn = document.getElementById('close-map-btn');
         this.mapOverlay = document.getElementById('map-overlay');
 
+        this.modal = new QuantumModal();
         this.init();
     }
 
     init() {
-        // Condition: DO NOT auto-load if we just entered.
-        // Instead, we will always start at 'start', and the engine will provide a 'CONTINUE' button if history exists.
         this.loadNode('start');
 
         this.resetBtn.addEventListener('click', () => this.confirmRestart());
@@ -43,11 +78,10 @@ class QuantumNarrativeEngine {
         this.currentState = node;
         if (nodeId.startsWith('atom_')) {
             this.observedAtoms.add(nodeId);
-            // Only add to history if it's the latest step
             if (this.history[this.history.length - 1] !== nodeId) {
                 this.history.push(nodeId);
             }
-            this.isRealityConfirmed = true; // Any atom visit confirms reality
+            this.isRealityConfirmed = true;
         }
 
         this.renderNode(node);
@@ -70,7 +104,6 @@ class QuantumNarrativeEngine {
     renderActions(nodeId, actions) {
         this.actionButtons.innerHTML = '';
 
-        // Dynamic Logic: Add 'Continue' button to start if history exists
         if (nodeId === 'start' && this.history.length > 0) {
             const contBtn = document.createElement('button');
             const lastNodeId = this.history[this.history.length - 1];
@@ -84,7 +117,6 @@ class QuantumNarrativeEngine {
             const btn = document.createElement('button');
             btn.innerText = action.text;
 
-            // Pulse the first action only if there's no continue button
             if (index === 0 && (nodeId !== 'start' || this.history.length === 0)) {
                 btn.classList.add('quantum-pulse');
             }
@@ -136,31 +168,10 @@ class QuantumNarrativeEngine {
     toggleMap(show) {
         if (show) {
             this.mapOverlay.classList.remove('hidden');
-            this.quantumMap.render(this.history, (node) => this.showNodeInfo(node));
+            this.quantumMap.render(this.history, (id) => this.handleMapClick(id), (id) => this.handleMapDelete(id));
         } else {
             this.mapOverlay.classList.add('hidden');
-            document.getElementById('node-info-panel').classList.add('hidden');
         }
-    }
-
-    showNodeInfo(node) {
-        const panel = document.getElementById('node-info-panel');
-        const title = document.getElementById('selected-node-title');
-        const observeBtn = document.getElementById('map-observe-btn');
-        const cutBtn = document.getElementById('map-cut-btn');
-
-        title.innerText = node.title;
-        panel.classList.remove('hidden');
-
-        observeBtn.onclick = () => {
-            this.handleMapClick(node.id);
-        };
-
-        cutBtn.onclick = () => {
-            if (this.handleMapDelete(node.id)) {
-                panel.classList.add('hidden');
-            }
-        };
     }
 
     handleMapClick(nodeId) {
@@ -168,19 +179,29 @@ class QuantumNarrativeEngine {
         this.loadNode(nodeId);
     }
 
-    handleMapDelete(nodeId) {
-        if (confirm(`'${nodeId}' 지점의 엔탕글먼트를 절단하시겠습니까? 이력에서 삭제됩니다.`)) {
+    async handleMapDelete(nodeId) {
+        const confirmed = await this.modal.show(
+            "ENTANGLEMENT CUT",
+            `'${nodeId}' 지점의 엔탕글먼트를 절단하시겠습니까? 해당 관측 이력이 영구히 삭제됩니다.`,
+            true
+        );
+
+        if (confirmed) {
             this.history = this.history.filter(id => id !== nodeId);
             this.observedAtoms.delete(nodeId);
             this.saveState();
-            this.quantumMap.render(this.history, (node) => this.showNodeInfo(node));
-            return true;
+            this.quantumMap.render(this.history, (id) => this.handleMapClick(id), (id) => this.handleMapDelete(id));
         }
-        return false;
     }
 
-    confirmRestart() {
-        if (confirm("현실을 재구축하시겠습니까? 모든 관측 데이터가 초기화됩니다.")) {
+    async confirmRestart() {
+        const confirmed = await this.modal.show(
+            "REALITY RECONSTRUCTION",
+            "현실을 재구축하시겠습니까? 모든 관측 데이터와 엔탕글먼트가 초기화됩니다.",
+            true
+        );
+
+        if (confirmed) {
             localStorage.clear();
             location.reload();
         }
@@ -194,14 +215,27 @@ class QuantumMap {
         this.data = storyData;
         this.nodeRadius = 15;
         this.nodes = [];
-        this.onSelect = null;
-        this.selectedId = null;
+        this.onClick = null;
+        this.onDelete = null;
+        this.pressTimer = null;
 
         this.resize();
         window.addEventListener('resize', () => this.resize());
 
         this.canvas.addEventListener('mousedown', (e) => this.handleMouseDown(e));
-        this.canvas.addEventListener('mousemove', (e) => this.handleMouseMove(e));
+        this.canvas.addEventListener('mouseup', () => clearTimeout(this.pressTimer));
+        this.canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            this.handleNodeAction(e, true);
+        });
+
+        this.canvas.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            this.pressTimer = setTimeout(() => {
+                this.handleNodeAction(touch, true);
+            }, 800);
+        });
+        this.canvas.addEventListener('touchend', () => clearTimeout(this.pressTimer));
     }
 
     resize() {
@@ -209,23 +243,18 @@ class QuantumMap {
         this.canvas.height = window.innerHeight;
     }
 
-    handleMouseMove(e) {
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        const isOverNode = this.nodes.some(node => {
-            const dist = Math.sqrt((node.x - mouseX) ** 2 + (node.y - mouseY) ** 2);
-            return dist < this.nodeRadius + 15;
-        });
-
-        this.canvas.style.cursor = isOverNode ? 'pointer' : 'default';
+    handleMouseDown(e) {
+        if (e.button === 2) return;
+        this.handleNodeAction(e, e.ctrlKey);
     }
 
-    handleMouseDown(e) {
+    handleNodeAction(e, isDeleteAction) {
         const rect = this.canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        const mouseX = clientX - rect.left;
+        const mouseY = clientY - rect.top;
 
         const clickedNode = this.nodes.find(node => {
             const dist = Math.sqrt((node.x - mouseX) ** 2 + (node.y - mouseY) ** 2);
@@ -233,19 +262,21 @@ class QuantumMap {
         });
 
         if (clickedNode) {
-            this.selectedId = clickedNode.id;
-            if (this.onSelect) this.onSelect(clickedNode);
-            this.draw();
-        } else {
-            this.selectedId = null;
-            document.getElementById('node-info-panel').classList.add('hidden');
-            this.draw();
+            if (isDeleteAction) {
+                if (this.onDelete) this.onDelete(clickedNode.id);
+            } else {
+                if (this.onClick) this.onClick(clickedNode.id);
+            }
         }
     }
 
-    render(history, onSelect) {
-        this.onSelect = onSelect;
-        this.history = history;
+    render(history, onClick, onDelete) {
+        this.onClick = onClick;
+        this.onDelete = onDelete;
+        const ctx = this.ctx;
+        ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        if (history.length === 0) return;
 
         this.nodes = history.map((id, i) => {
             const seed = id.split('_')[1] || i;
@@ -267,8 +298,6 @@ class QuantumMap {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-        if (this.nodes.length === 0) return;
-
         // Draw connections
         ctx.lineWidth = 1;
         for (let i = 0; i < this.nodes.length - 1; i++) {
@@ -288,15 +317,6 @@ class QuantumMap {
         // Draw nodes
         this.nodes.forEach((node, i) => {
             const isLast = i === this.nodes.length - 1;
-            const isSelected = this.selectedId === node.id;
-
-            if (isSelected) {
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, 20, 0, Math.PI * 2);
-                ctx.stroke();
-            }
 
             ctx.shadowBlur = isLast ? 30 : 10;
             ctx.shadowColor = isLast ? '#ff00ff' : 'var(--accent-color)';
@@ -306,7 +326,7 @@ class QuantumMap {
             ctx.arc(node.x, node.y, isLast ? 8 : 5, 0, Math.PI * 2);
             ctx.fill();
 
-            if (isLast && !isSelected) {
+            if (isLast) {
                 ctx.strokeStyle = '#fff';
                 ctx.lineWidth = 1;
                 ctx.beginPath();
@@ -315,10 +335,15 @@ class QuantumMap {
             }
 
             ctx.shadowBlur = 0;
-            ctx.fillStyle = isSelected ? '#fff' : 'rgba(255, 255, 255, 0.7)';
-            ctx.font = isSelected ? '700 12px Inter' : '700 10px Inter';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = '700 10px Inter';
             ctx.textAlign = 'center';
-            ctx.fillText(node.title, node.x, node.y + 35);
+            ctx.fillText(node.title, node.x, node.y + 25);
+
+            if (isLast) {
+                ctx.fillStyle = 'rgba(0, 242, 255, 0.5)';
+                ctx.fillText("(L-CLICK: OBSERVE | R-CLICK: CUT)", node.x, node.y + 38);
+            }
         });
     }
 }
