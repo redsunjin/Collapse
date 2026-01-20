@@ -61,3 +61,4 @@
 
 ---
 *Created by **redsunjin** | Designed with the **Quantum Narrative Engine***
+© 2026 Tangle-Studio. All rights reserved.
